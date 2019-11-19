@@ -1,0 +1,59 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: aws-python 
+provider:
+  name: aws
+  stage: beta
+  region: us-west-2
+  runtime: python3.7
+  ## attaching policies to get and put objects in s3 bucket.
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+        - s3:GetObject
+        - s3:PutObject
+      Resource: 
+        - !Join ["", ["arn:aws:s3:::", "${self:service}", "-", "${self:provider.stage}", "-","serverlessdeploymentbucket", "-*"]]
+        - !Join ["", ["arn:aws:s3:::", "${self:service}", "-", "${self:provider.stage}", "-", "serverlessdeploymentbucket", "-*/*"]]
+        - !Join ["", ["arn:aws:s3:::", "heatmap-analytics-plugin"]]
+        - !Join ["", ["arn:aws:s3:::", "heatmap-analytics-plugin/*"]]
+        - !Join ["", ["arn:aws:s3:::", "heatmap-analytics-plugin-parquet"]]
+        - !Join ["", ["arn:aws:s3:::", "heatmap-analytics-plugin-parquet/*"]]
+        - !Join ["", ["arn:aws:s3:::", "aws-athena-query-results-458527324684-us-east-2"]]
+        - !Join ["", ["arn:aws:s3:::", "aws-athena-query-results-458527324684-us-east-2/*"]]
+package:
+  exclude:
+    - node_modules/**
+    - .serverless/**
+    - env/**
+  
+functions:
+  c2parquet:
+    handler: handler.convert
+    events:
+      - http:
+          path: parquet
+          method: get
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    zip: true
+    slim: true
+
+plugins:
+  - serverless-offline
+  - serverless-python-requirements
+
